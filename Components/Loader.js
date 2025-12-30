@@ -1,190 +1,247 @@
 // Components/Loader.js
-import React, { useEffect, useRef } from 'react';
-import { StyleSheet, ImageBackground, Animated, Easing, StatusBar, Dimensions, Text, Image, View } from 'react-native';
+import React, { memo, useMemo } from 'react';
+import { StyleSheet, ImageBackground, StatusBar, View, Platform } from 'react-native';
+import { WebView } from 'react-native-webview';
 
 const BACK = require('../assets/bg.webp');
-const APP_ICON = require('../assets/app_icon.webp');
-const { width: W, height: H } = Dimensions.get('window');
 
-const RED_STAR = '#0066FF';
-const NUM_STARS = 15;
+function buildHtml({ size = 1.5 }) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+    * { -webkit-tap-highlight-color: transparent; }
+    .wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+    }
 
-export default function Loader() {
-  const logoPulse = useRef(new Animated.Value(1)).current;
+    /* From Uiverse.io by ZacharyCrespin */
+    @keyframes square-animation {
+      0% {
+        left: 0;
+        top: 0;
+      }
 
-  const stars = useRef(
-    Array.from({ length: NUM_STARS }, () => {
-      const duration = 2000 + Math.random() * 2000; // 2-4 секунды
-      const startY = -50 - Math.random() * 200; // начинаем с разных позиций
-      return {
-        translateY: new Animated.Value(startY),
-        opacity: new Animated.Value(0),
-        scale: new Animated.Value(0.5),
-        left: Math.random() * W,
-        duration: duration,
-        startY: startY,
-      };
-    })
-  ).current;
+      10.5% {
+        left: 0;
+        top: 0;
+      }
 
-  useEffect(() => {
-    // Анимация пульсации логотипа
-    const logoAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(logoPulse, {
-          toValue: 1.15,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(logoPulse, {
-          toValue: 1,
-          duration: 1000,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    logoAnimation.start();
+      12.5% {
+        left: 32px;
+        top: 0;
+      }
 
-    // Анимация звезд
-    const animations = stars.map((star, index) => {
-      return Animated.loop(
-        Animated.sequence([
-          Animated.parallel([
-            Animated.timing(star.translateY, {
-              toValue: H + 100,
-              duration: star.duration,
-              easing: Easing.linear,
-              useNativeDriver: true,
-            }),
-            Animated.sequence([
-              Animated.timing(star.opacity, {
-                toValue: 1,
-                duration: 200,
-                easing: Easing.out(Easing.quad),
-                useNativeDriver: true,
-              }),
-              Animated.delay(star.duration - 400),
-              Animated.timing(star.opacity, {
-                toValue: 0,
-                duration: 200,
-                easing: Easing.in(Easing.quad),
-                useNativeDriver: true,
-              }),
-            ]),
-            Animated.sequence([
-              Animated.timing(star.scale, {
-                toValue: 1,
-                duration: 200,
-                easing: Easing.out(Easing.quad),
-                useNativeDriver: true,
-              }),
-              Animated.timing(star.scale, {
-                toValue: 0.3,
-                duration: star.duration - 400,
-                easing: Easing.in(Easing.quad),
-                useNativeDriver: true,
-              }),
-            ]),
-          ]),
-          Animated.timing(star.translateY, {
-            toValue: star.startY,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-    });
+      23% {
+        left: 32px;
+        top: 0;
+      }
 
-    animations.forEach((anim) => anim.start());
+      25% {
+        left: 64px;
+        top: 0;
+      }
 
-    return () => {
-      logoAnimation.stop();
-      animations.forEach((anim) => anim.stop());
-    };
-  }, [stars, H, logoPulse]);
+      35.5% {
+        left: 64px;
+        top: 0;
+      }
 
-  const Star = ({ star, index }) => {
-    const rotation = star.translateY.interpolate({
-      inputRange: [star.startY, H + 100],
-      outputRange: ['0deg', '720deg'],
-    });
+      37.5% {
+        left: 64px;
+        top: 32px;
+      }
 
-    return (
-      <Animated.View
-        style={[
-          styles.star,
-          {
-            left: star.left,
-            transform: [
-              { translateY: star.translateY },
-              { rotate: rotation },
-              { scale: star.scale },
-            ],
-            opacity: star.opacity,
-          },
-        ]}
-      >
-        <Text style={styles.starText}>★</Text>
-      </Animated.View>
-    );
-  };
+      48% {
+        left: 64px;
+        top: 32px;
+      }
+
+      50% {
+        left: 32px;
+        top: 32px;
+      }
+
+      60.5% {
+        left: 32px;
+        top: 32px;
+      }
+
+      62.5% {
+        left: 32px;
+        top: 64px;
+      }
+
+      73% {
+        left: 32px;
+        top: 64px;
+      }
+
+      75% {
+        left: 0;
+        top: 64px;
+      }
+
+      85.5% {
+        left: 0;
+        top: 64px;
+      }
+
+      87.5% {
+        left: 0;
+        top: 32px;
+      }
+
+      98% {
+        left: 0;
+        top: 32px;
+      }
+
+      100% {
+        left: 0;
+        top: 0;
+      }
+    }
+
+    .loader {
+      position: relative;
+      width: 96px;
+      height: 96px;
+      transform: rotate(45deg) scale(${size});
+      transform-origin: center;
+    }
+
+    .loader-square {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 28px;
+      height: 28px;
+      margin: 2px;
+      border-radius: 0px;
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      animation: square-animation 10s ease-in-out infinite both;
+    }
+
+    .loader-square:nth-of-type(0) {
+      animation-delay: 0s;
+      background: #DAA520; /* глубокий золотой */
+    }
+
+    .loader-square:nth-of-type(1) {
+      animation-delay: -1.4285714286s;
+      background: #003366; /* темный синий */
+    }
+
+    .loader-square:nth-of-type(2) {
+      animation-delay: -2.8571428571s;
+      background: #DAA520; /* глубокий золотой */
+    }
+
+    .loader-square:nth-of-type(3) {
+      animation-delay: -4.2857142857s;
+      background: #003366; /* темный синий */
+    }
+
+    .loader-square:nth-of-type(4) {
+      animation-delay: -5.7142857143s;
+      background: #DAA520; /* глубокий золотой */
+    }
+
+    .loader-square:nth-of-type(5) {
+      animation-delay: -7.1428571429s;
+      background: #003366; /* темный синий */
+    }
+
+    .loader-square:nth-of-type(6) {
+      animation-delay: -8.5714285714s;
+      background: #DAA520; /* глубокий золотой */
+    }
+
+    .loader-square:nth-of-type(7) {
+      animation-delay: -10s;
+      background: #003366; /* темный синий */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <!-- From Uiverse.io by ZacharyCrespin -->
+    <div class="loader">
+      <div class="loader-square"></div>
+      <div class="loader-square"></div>
+      <div class="loader-square"></div>
+      <div class="loader-square"></div>
+      <div class="loader-square"></div>
+      <div class="loader-square"></div>
+      <div class="loader-square"></div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+function Loader({ size = 1.5 }) {
+  const html = useMemo(() => buildHtml({ size }), [size]);
+
+  // размер WebView с учетом масштаба и запасом, чтобы не обрезались квадраты
+  const webSize = Math.round(150 * size);
 
   return (
     <ImageBackground source={BACK} resizeMode="cover" style={styles.bg}>
-      <StatusBar barStyle="light-content" backgroundColor="#000000" />
-      {stars.map((star, index) => (
-        <Star key={index} star={star} index={index} />
-      ))}
-      <View style={styles.logoContainer}>
-        <Animated.View
-          style={[
-            styles.logoWrapper,
-            {
-              transform: [{ scale: logoPulse }],
-            },
-          ]}
-        >
-          <Image source={APP_ICON} style={styles.logo} resizeMode="contain" />
-        </Animated.View>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <View style={styles.center}>
+        <WebView
+          originWhitelist={['*']}
+          source={{ html }}
+          style={[styles.web, { width: webSize, height: webSize }]}
+          scrollEnabled={false}
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+          javaScriptEnabled
+          domStorageEnabled
+          automaticallyAdjustContentInsets={false}
+          // ✅ ВАЖНО для Android: mask/blur/filter работают стабильнее в software
+          androidLayerType={Platform.OS === 'android' ? 'software' : undefined}
+        />
       </View>
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  bg: {
+  bg: { flex: 1, overflow: 'hidden' },
+  center: {
     flex: 1,
-    overflow: 'hidden',
-  },
-  star: {
-    position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
-  starText: {
-    fontSize: 24,
-    color: RED_STAR,
-    textShadowColor: RED_STAR,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-  },
-  logoContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: 120,
-    height: 120,
+  web: {
+    backgroundColor: 'transparent',
   },
 });
+
+export default memo(Loader);
